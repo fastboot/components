@@ -1561,6 +1561,11 @@
         padding: 0;
         border: 1px solid rgba(0, 0, 0, 0.1);
         border-bottom: none;
+        // &.loading {
+        .slot:first-of-type {
+          @include progress-bar(-4px, 8px, var(--blue), var(--blue-lighter));
+        }
+        // }
 
         .slot {
           border: none;
