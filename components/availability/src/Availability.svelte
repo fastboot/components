@@ -101,7 +101,6 @@
             })),
         );
       }
-
       $AvailabilityStore[JSON.stringify(availabilityQuery)] =
         $AvailabilityStore[JSON.stringify(availabilityQuery)].then(
           (availability) => {
@@ -133,7 +132,7 @@
   let internalProps: Partial<Manifest> = {};
   let manifest: Partial<Manifest> = {};
   let editorManifest: Partial<EditorManifest> = {};
-  let loading: boolean;
+  let loading = true;
 
   $: calendarID = "";
   onMount(async () => {
@@ -155,6 +154,7 @@
       component_id: id,
       calendarIDs: [], // empty array will fetch all calendars
     };
+    loading = false;
     const calendarsList = await CalendarStore.getCalendars(calendarQuery); // TODO: we probably dont want to expose a list of all a users calendars to the end-user here.
     loading = false;
     calendarID = calendarsList?.find((cal) => cal.is_primary)?.id || "";
@@ -807,6 +807,7 @@
         })),
       });
     }
+    loading = false;
     newCalendarTimeslotsForGivenEmails = freeBusyCalendars;
   }
 
@@ -1561,11 +1562,11 @@
         padding: 0;
         border: 1px solid rgba(0, 0, 0, 0.1);
         border-bottom: none;
-        // &.loading {
-        .slot:first-of-type {
-          @include progress-bar(-4px, 8px, var(--blue), var(--blue-lighter));
+        &.loading {
+          .slot:first-of-type {
+            @include progress-bar(-4px, 8px, var(--blue), var(--blue-lighter));
+          }
         }
-        // }
 
         .slot {
           border: none;
@@ -1805,6 +1806,7 @@
 --free-color: {free_color}; --busy-color: {busy_color}; --closed-color: {closed_color}; --partial-color: {partial_color}; --selected-color: {selected_color};"
 >
   <header class:dated={allow_date_change}>
+    <h1>loading state is set to {loading}</h1>
     <h2 class="month">
       {#if days[days.length - 1].timestamp.getMonth() !== days[0].timestamp.getMonth()}
         {#if days[days.length - 1].timestamp.getFullYear() !== days[0].timestamp.getFullYear()}
@@ -1922,7 +1924,7 @@
               </div>
             {/each}
           </div>
-          <div class="slots">
+          <div class="slots" class:loading>
             {#each day.slots as slot}
               <button
                 data-available-calendars={slot.available_calendars.toString()}
