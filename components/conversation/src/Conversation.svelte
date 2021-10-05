@@ -344,13 +344,23 @@
       }
     }
   }
-
+  .loading {
+    @include progress-bar(
+      calc((100% - 80px) / 2),
+      8px,
+      var(--blue),
+      var(--blue-lighter)
+    );
+  }
   .messages {
     display: grid;
     gap: 1rem;
     padding: 1rem;
     padding-top: calc(1rem + 15px + 15px + 15px);
     padding-bottom: calc(25px + 12px + 12px);
+    &.loading {
+      height: 100%;
+    }
     .message {
       max-width: min(
         400px,
@@ -514,7 +524,7 @@
 <nylas-error {id} />
 <main bind:this={main}>
   {#await conversation}
-    Loading Component...
+    <div class="loading" />
   {:then _}
     <header class="mobile" class:expanded={headerExpanded}>
       {#if reply.to.length}
@@ -546,8 +556,8 @@
         <span>cc: {reply.cc.map((p) => p.email).join(", ")} </span>
       {/if}
     </header>
-    {#if status === "loading"}Loading Messages...{/if}
-    <div class="messages {theme}" class:dont-show-avatars={hideAvatars}>
+    {#if status === "loading"}<div class="loading" />{/if}
+    <div class="messages {theme} loading" class:dont-show-avatars={hideAvatars}>
       {#each conversationMessages as message, i}
         {#await message.from[0] then from}
           {#await conversationMessages[i - 1] ? conversationMessages[i - 1].from[0] : { name: "", email: "" } then previousFrom}
