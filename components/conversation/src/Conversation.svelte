@@ -9,6 +9,7 @@
     fetchContactsByQuery,
     fetchAccount,
     fetchCleanConversations,
+    ErrorStore,
   } from "@commons";
   import { afterUpdate } from "svelte";
   import { get_current_component, onMount } from "svelte/internal";
@@ -58,6 +59,8 @@
     }
   });
 
+  $: hasError = Object.keys($ErrorStore).length ? true : false;
+  $: console.log({ hasError }, { $ErrorStore });
   $: conversationMessages = conversationManuallyPassed
     ? messages
     : conversation?.messages || [];
@@ -157,7 +160,7 @@
     if (query.component_id && query.thread_id) {
       status = "loading";
       conversation = await ConversationStore.getConversation(query);
-      status = "loaded";
+      // status = "loaded";
     }
   }
 
@@ -276,7 +279,11 @@
       main.scrollTo({ top: scrollHeight, left: 0, behavior: "smooth" });
     }
   };
-  afterUpdate(scrollToBottom);
+
+  afterUpdate(() => {
+    status = "loaded";
+    scrollToBottom();
+  });
 
   // #region mobile header view
   let headerExpanded = false;
@@ -298,14 +305,37 @@
   $avatar-horizontal-space: 1rem;
 
   main {
-    height: 100%;
+    height: 100vh;
     width: 100%;
     overflow: auto;
     position: relative;
     font-family: sans-serif;
     background-color: var(--grey-light);
+    &.loading {
+      @include progress-bar(
+        calc((100% - 80px) / 2),
+        25%,
+        var(--blue),
+        var(--blue-lighter),
+        calc((100% - 40px) / 2)
+      );
+    }
   }
-
+  .error {
+    @include progress-bar(
+      calc((100% - 80px) / 2),
+      25%,
+      var(--red),
+      var(--red),
+      calc((100% - 40px) / 2)
+    );
+    &::before,
+    &::after {
+      animation: none;
+      width: calc((100% - 40px) / 2);
+    }
+    height: 100vh;
+  }
   header {
     display: flex;
     background: white;
@@ -344,23 +374,12 @@
       }
     }
   }
-  .loading {
-    @include progress-bar(
-      calc((100% - 80px) / 2),
-      8px,
-      var(--blue),
-      var(--blue-lighter)
-    );
-  }
   .messages {
     display: grid;
     gap: 1rem;
     padding: 1rem;
     padding-top: calc(1rem + 15px + 15px + 15px);
     padding-bottom: calc(25px + 12px + 12px);
-    &.loading {
-      height: 100%;
-    }
     .message {
       max-width: min(
         400px,
@@ -522,7 +541,7 @@
 </style>
 
 <nylas-error {id} />
-<main bind:this={main}>
+<main bind:this={main} class="error" class:loading={!!(status === "loading")}>
   {#await conversation}
     <div class="loading" />
   {:then _}
@@ -556,8 +575,7 @@
         <span>cc: {reply.cc.map((p) => p.email).join(", ")} </span>
       {/if}
     </header>
-    {#if status === "loading"}<div class="loading" />{/if}
-    <div class="messages {theme} loading" class:dont-show-avatars={hideAvatars}>
+    <div class="messages {theme}" class:dont-show-avatars={hideAvatars}>
       {#each conversationMessages as message, i}
         {#await message.from[0] then from}
           {#await conversationMessages[i - 1] ? conversationMessages[i - 1].from[0] : { name: "", email: "" } then previousFrom}
@@ -645,5 +663,7 @@
         </form>
       </div>
     {/if}
+  {:catch error}
+    <nylas-message-error error_message={error} />
   {/await}
 </main>
