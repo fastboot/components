@@ -27,7 +27,8 @@
   $topPosition,
   $leftPosition,
   $backgroundColor,
-  $progressBarColor
+  $progressBarColor,
+  $width
 ) {
   @keyframes progress {
     0% {
@@ -53,6 +54,6 @@
     left: $leftPosition;
     position: absolute;
     top: $topPosition;
-    width: 100%;
+    max-width: $width;
   }
 }
