@@ -26,6 +26,7 @@
     Conversation,
     Account,
   } from "@commons/types/Nylas";
+  import "@commons/components/ErrorMessage.svelte";
   import { getDate } from "@commons/methods/datetime";
   import { getContactInitialForAvatar } from "@commons/methods/contact_strings";
   import ToggleIcon from "./assets/toggle.svg";
@@ -49,6 +50,7 @@
   $: conversationManuallyPassed = !!messages && messages.length > 0;
 
   onMount(async () => {
+    status = "loading";
     manifest = ((await $ManifestStore[
       JSON.stringify({ component_id: id, access_token })
     ]) || {}) as ConversationProperties;
@@ -60,7 +62,6 @@
   });
 
   $: hasError = Object.keys($ErrorStore).length ? true : false;
-  $: console.log({ hasError }, { $ErrorStore });
   $: conversationMessages = conversationManuallyPassed
     ? messages
     : conversation?.messages || [];
@@ -305,36 +306,23 @@
   $avatar-horizontal-space: 1rem;
 
   main {
-    height: 100vh;
+    height: 100%;
+    min-height: 100vh;
     width: 100%;
     overflow: auto;
     position: relative;
     font-family: sans-serif;
     background-color: var(--grey-light);
     &.loading {
-      @include progress-bar(
-        calc((100% - 80px) / 2),
-        25%,
-        var(--blue),
-        var(--blue-lighter),
-        calc((100% - 40px) / 2)
-      );
+      @include progress-bar(44.5px, 0, var(--blue), var(--blue-lighter));
     }
   }
   .error {
-    @include progress-bar(
-      calc((100% - 80px) / 2),
-      25%,
-      var(--red),
-      var(--red),
-      calc((100% - 40px) / 2)
-    );
+    @include progress-bar(44.5px, 0, var(--red), var(--red));
     &::before,
     &::after {
       animation: none;
-      width: calc((100% - 40px) / 2);
     }
-    height: 100vh;
   }
   header {
     display: flex;
@@ -378,8 +366,7 @@
     display: grid;
     gap: 1rem;
     padding: 1rem;
-    padding-top: calc(1rem + 15px + 15px + 15px);
-    padding-bottom: calc(25px + 12px + 12px);
+    padding: 61px 0 49px 0;
     .message {
       max-width: min(
         400px,
@@ -541,7 +528,12 @@
 </style>
 
 <nylas-error {id} />
-<main bind:this={main} class="error" class:loading={!!(status === "loading")}>
+<main bind:this={main} class:loading={!!(status === "loading")}>
+  {#if hasError}
+    <div class="error">
+      <nylas-message-error error_message={$ErrorStore[id].message} />
+    </div>
+  {/if}
   {#await conversation}
     <div class="loading" />
   {:then _}
@@ -575,6 +567,7 @@
         <span>cc: {reply.cc.map((p) => p.email).join(", ")} </span>
       {/if}
     </header>
+    {#if status === "loading"}Loading Messages...{/if}
     <div class="messages {theme}" class:dont-show-avatars={hideAvatars}>
       {#each conversationMessages as message, i}
         {#await message.from[0] then from}
@@ -663,7 +656,5 @@
         </form>
       </div>
     {/if}
-  {:catch error}
-    <nylas-message-error error_message={error} />
   {/await}
 </main>
