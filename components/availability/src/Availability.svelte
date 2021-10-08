@@ -101,6 +101,7 @@
             })),
         );
       }
+
       $AvailabilityStore[JSON.stringify(availabilityQuery)] =
         $AvailabilityStore[JSON.stringify(availabilityQuery)].then(
           (availability) => {
@@ -132,7 +133,7 @@
   let internalProps: Partial<Manifest> = {};
   let manifest: Partial<Manifest> = {};
   let editorManifest: Partial<EditorManifest> = {};
-  let loading = true;
+  let loading: boolean;
 
   $: calendarID = "";
   onMount(async () => {
@@ -1566,11 +1567,6 @@
         padding: 0;
         border: 1px solid rgba(0, 0, 0, 0.1);
         border-bottom: none;
-        &.loading {
-          .slot:first-of-type {
-            @include progress-bar(-4px, 8px, var(--blue), var(--blue-lighter));
-          }
-        }
 
         .slot {
           border: none;
@@ -1927,7 +1923,7 @@
               </div>
             {/each}
           </div>
-          <div class="slots" class:loading>
+          <div class="slots">
             {#each day.slots as slot}
               <button
                 data-available-calendars={slot.available_calendars.toString()}
